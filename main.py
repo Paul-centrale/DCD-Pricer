@@ -7,6 +7,41 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import datetime
 
+# Import configuration
+try:
+    from config import DEFAULT_PARAMS, CURRENCY_PAIRS, VALIDATION_RANGES
+except ImportError:
+    # Fallback configuration if config.py is not available
+    DEFAULT_PARAMS = {
+        "market": {
+            "spot": 1.0500,
+            "domestic_rate": 0.035,
+            "foreign_rate": 0.050,
+            "volatility": 0.12
+        },
+        "product": {
+            "maturity_days": 91,
+            "notional": 1000000,
+            "base_rate": 0.02,
+            "strike": 1.0300
+        },
+        "matrix": {
+            "strike_range_pct": 0.05,
+            "strike_steps": 10,
+            "maturity_min": 30,
+            "maturity_max": 180,
+            "maturity_steps": 6
+        }
+    }
+    CURRENCY_PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CHF", "USD/CAD", "NZD/USD"]
+    VALIDATION_RANGES = {
+        "spot": (0.5, 2.0),
+        "rates": (0.0, 0.10),
+        "volatility": (0.05, 0.50),
+        "maturity": (1, 365),
+        "notional": (10000, 100000000)
+    }
+
 class DCDPricer:
     """
     Dual Currency Deposit (DCD) Pricer
@@ -294,19 +329,24 @@ def main():
         "AUD/USD": {"default_basis": 365, "convention": "Australian"},
         "USD/CHF": {"default_basis": 360, "convention": "USD/Swiss"},
         "USD/CAD": {"default_basis": 365, "convention": "North American"},
-        "NZD/USD": {"default_basis": 365, "convention": "New Zealand"}
+        "NZD/USD": {"default_basis": 365, "convention": "New Zealand"},
+        "EUR/GBP": {"default_basis": 365, "convention": "European"},
+        "EUR/JPY": {"default_basis": 360, "convention": "European/Asian"}
     }
     
     currency_pair = st.sidebar.selectbox(
         "Currency Pair",
-        list(currency_pairs.keys()),
+        CURRENCY_PAIRS,
         index=0
     )
     
+    # Get day count basis for selected pair (fallback to 360 if not defined)
+    pair_info = currency_pairs.get(currency_pair, {"default_basis": 360, "convention": "Standard"})
+    
     # Day count basis
-    default_basis = currency_pairs[currency_pair]["default_basis"]
+    default_basis = pair_info["default_basis"]
     day_count_basis = st.sidebar.selectbox(
-        f"Day Count Basis ({currency_pairs[currency_pair]['convention']} default: {default_basis})",
+        f"Day Count Basis ({pair_info['convention']} default: {default_basis})",
         [360, 365],
         index=0 if default_basis == 360 else 1
     )
@@ -319,20 +359,54 @@ def main():
     )
     
     # Market data inputs
-    spot = st.sidebar.number_input("Spot Rate", value=1.0500, step=0.0001, format="%.4f")
-    domestic_rate = st.sidebar.number_input("Domestic Rate (%)", value=3.5, step=0.1) / 100
-    foreign_rate = st.sidebar.number_input("Foreign Rate (%)", value=5.0, step=0.1) / 100
-    volatility = st.sidebar.number_input("Volatility (%)", value=12.0, step=0.5) / 100
+    spot = st.sidebar.number_input(
+        "Spot Rate", 
+        value=DEFAULT_PARAMS["market"]["spot"], 
+        step=0.0001, 
+        format="%.4f",
+        min_value=VALIDATION_RANGES["spot"][0],
+        max_value=VALIDATION_RANGES["spot"][1]
+    )
+    domestic_rate = st.sidebar.number_input(
+        "Domestic Rate (%)", 
+        value=DEFAULT_PARAMS["market"]["domestic_rate"] * 100, 
+        step=0.1,
+        min_value=VALIDATION_RANGES["rates"][0] * 100,
+        max_value=VALIDATION_RANGES["rates"][1] * 100
+    ) / 100
+    foreign_rate = st.sidebar.number_input(
+        "Foreign Rate (%)", 
+        value=DEFAULT_PARAMS["market"]["foreign_rate"] * 100, 
+        step=0.1,
+        min_value=VALIDATION_RANGES["rates"][0] * 100,
+        max_value=VALIDATION_RANGES["rates"][1] * 100
+    ) / 100
+    volatility = st.sidebar.number_input(
+        "Volatility (%)", 
+        value=DEFAULT_PARAMS["market"]["volatility"] * 100, 
+        step=0.5,
+        min_value=VALIDATION_RANGES["volatility"][0] * 100,
+        max_value=VALIDATION_RANGES["volatility"][1] * 100
+    ) / 100
     
     # Product parameters
     st.sidebar.header("Product Parameters")
-    maturity_days = st.sidebar.number_input("Maturity (Days)", value=91, step=1)
+    maturity_days = st.sidebar.number_input(
+        "Maturity (Days)", 
+        value=DEFAULT_PARAMS["product"]["maturity_days"], 
+        step=1,
+        min_value=VALIDATION_RANGES["maturity"][0],
+        max_value=VALIDATION_RANGES["maturity"][1]
+    )
     
     # Notional with currency specification
     base_currency, quote_currency = currency_pair.split("/")
     notional = st.sidebar.number_input(
         f"Notional Amount ({base_currency})", 
-        value=1000000, step=100000,
+        value=DEFAULT_PARAMS["product"]["notional"], 
+        step=100000,
+        min_value=VALIDATION_RANGES["notional"][0],
+        max_value=VALIDATION_RANGES["notional"][1],
         help=f"Deposit amount in {base_currency}"
     )
     
@@ -388,7 +462,11 @@ def main():
         
     else:
         # Linear progression (original method)
-        base_rate = st.sidebar.number_input("Base Deposit Rate (%)", value=2.0, step=0.1) / 100
+        base_rate = st.sidebar.number_input(
+            "Base Deposit Rate (%)", 
+            value=DEFAULT_PARAMS["product"]["base_rate"] * 100, 
+            step=0.1
+        ) / 100
         
         use_maturity_adjustment = st.sidebar.checkbox(
             "Apply Maturity Term Structure", 
@@ -417,7 +495,12 @@ def main():
         rate_curve_slope = 0.0
     
     # Strike parameter
-    strike = st.sidebar.number_input("Strike Rate", value=1.0300, step=0.0001, format="%.4f")
+    strike = st.sidebar.number_input(
+        "Strike Rate", 
+        value=DEFAULT_PARAMS["product"]["strike"], 
+        step=0.0001, 
+        format="%.4f"
+    )
     
     # Create pricer instance
     pricer = DCDPricer(
@@ -597,14 +680,40 @@ def main():
     matrix_col1, matrix_col2 = st.columns(2)
     
     with matrix_col1:
-        strike_min = st.number_input("Strike Range - Min", value=spot * 0.95, step=0.001, format="%.4f")
-        strike_max = st.number_input("Strike Range - Max", value=spot * 1.05, step=0.001, format="%.4f")
-        strike_steps = st.number_input("Strike Steps", value=10, step=1)
+        strike_min = st.number_input(
+            "Strike Range - Min", 
+            value=spot * (1 - DEFAULT_PARAMS["matrix"]["strike_range_pct"]), 
+            step=0.001, 
+            format="%.4f"
+        )
+        strike_max = st.number_input(
+            "Strike Range - Max", 
+            value=spot * (1 + DEFAULT_PARAMS["matrix"]["strike_range_pct"]), 
+            step=0.001, 
+            format="%.4f"
+        )
+        strike_steps = st.number_input(
+            "Strike Steps", 
+            value=DEFAULT_PARAMS["matrix"]["strike_steps"], 
+            step=1
+        )
     
     with matrix_col2:
-        maturity_min = st.number_input("Maturity Range - Min (Days)", value=30, step=1)
-        maturity_max = st.number_input("Maturity Range - Max (Days)", value=180, step=1)
-        maturity_steps = st.number_input("Maturity Steps", value=6, step=1)
+        maturity_min = st.number_input(
+            "Maturity Range - Min (Days)", 
+            value=DEFAULT_PARAMS["matrix"]["maturity_min"], 
+            step=1
+        )
+        maturity_max = st.number_input(
+            "Maturity Range - Max (Days)", 
+            value=DEFAULT_PARAMS["matrix"]["maturity_max"], 
+            step=1
+        )
+        maturity_steps = st.number_input(
+            "Maturity Steps", 
+            value=DEFAULT_PARAMS["matrix"]["maturity_steps"], 
+            step=1
+        )
     
     if st.button("Generate Rate Matrix", type="primary"):
         # Validate inputs
@@ -827,7 +936,7 @@ def main():
         **Option Premium**: {base_currency} {dcd_result['option_premium']:,.0f}
         **Enhancement Period**: {pricer.deposit_year_fraction:.4f} years ({maturity_days}/{day_count_basis} days)
         **Settlement Convention**: T+{settlement_days} business days
-        **Day Count**: {day_count_basis} days/year ({currency_pairs[currency_pair]['convention']} convention)
+        **Day Count**: {day_count_basis} days/year ({pair_info['convention']} convention)
         """)
 
 if __name__ == "__main__":
