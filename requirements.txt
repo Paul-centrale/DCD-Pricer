@@ -1,7 +1,5 @@
 streamlit>=1.28.0
-quantlib>=1.29
+QuantLib-Python>=1.30
 numpy>=1.24.0
 pandas>=2.0.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
 plotly>=5.15.0

@@ -1,215 +1,160 @@
-# DCD (Dual Currency Deposit) Pricer
+# DCD Pricer - Dual Currency Deposit Analysis Tool
 
-A sophisticated pricing application for Dual Currency Deposits using QuantLib and Streamlit with professional-grade financial market conventions.
+A professional-grade financial application for pricing and analyzing Dual Currency Deposits (DCDs) using QuantLib and Streamlit.
 
-## What is a DCD?
+## 🚀 Quick Start (For End Users)
 
-A Dual Currency Deposit (DCD) is a structured financial product that combines:
-1. **A deposit** in the base currency earning an enhanced interest rate
-2. **A short call option** on the currency pair that may result in currency conversion
+### Option 1: Automatic Setup (Recommended)
+1. **Download** all files to a folder on your computer
+2. **Run the setup script**:
+   - **Windows**: Double-click `setup.py` or run `python setup.py` in Command Prompt
+   - **Mac/Linux**: Run `python3 setup.py` in Terminal
+3. **Launch the application**:
+   - **Windows**: Double-click `launch_dcd_pricer.bat`
+   - **Mac/Linux**: Double-click `launch_dcd_pricer.sh` or run `./launch_dcd_pricer.sh`
 
-The investor receives a higher interest rate than a regular deposit, but risks receiving the principal in a different currency if the option is exercised.
+### Option 2: Manual Setup
+If the automatic setup doesn't work, follow these steps:
 
-## 🚀 Key Features
+#### Requirements
+- Python 3.8 or higher
+- Internet connection for package installation
 
-### 📊 **Professional Pricing Engine**
-- **QuantLib Integration**: Black-Scholes-Merton with Garman-Kohlhagen for FX
-- **Market Conventions**: Currency-specific day count bases (360/365)
-- **Settlement Timing**: Proper T+2 settlement lag modeling
-- **Term Structure**: Maturity-dependent deposit rate curves
+#### Installation Steps
+1. **Install Python** (if not already installed):
+   - Download from https://python.org/downloads/
+   - During installation, check "Add Python to PATH"
 
-### 💱 **Multi-Currency Support**
-- **Currency Pairs**: EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CHF, USD/CAD, NZD/USD
-- **Day Count Conventions**: 
-  - 360-day basis: EUR/USD, USD/JPY, USD/CHF (European/FX standard)
-  - 365-day basis: GBP/USD, AUD/USD, USD/CAD, NZD/USD (UK/Commonwealth standard)
-- **Dual Currency Display**: Shows amounts in both base and quote currencies
-- **Currency Conversion**: Automatic calculation of conversion amounts
+2. **Open Terminal/Command Prompt** and navigate to the DCD Pricer folder
 
-### 🏦 **Advanced Rate Modeling**
-- **Base Rate Adjustment**: Maturity-dependent rate curves
-- **Term Structure**: Configurable rate slope (bps per day)
-- **Enhancement Calculation**: Precise option premium amortization
-- **Settlement Lag**: Separate option maturity and deposit settlement dates
-
-### 📈 **Comprehensive Analytics**
-- **Real-time Pricing**: Interactive parameter adjustment
-- **Payoff Visualization**: Currency-labeled payoff diagrams
-- **Risk Metrics**: Complete Greeks calculation
-- **Rate Matrices**: Multi-dimensional strike/maturity analysis
-- **Probability Analysis**: Conversion risk assessment
-
-## Installation & Setup
-
-1. **Virtual Environment**: A virtual environment has been created in `.venv/`
-
-2. **Install Dependencies**:
+3. **Install required packages**:
    ```bash
-   pip install -r requirements.txt
+   pip install streamlit QuantLib-Python numpy pandas plotly
    ```
 
-3. **Run the Application**:
+4. **Run the application**:
    ```bash
    streamlit run main.py
-   # or use the launcher
-   ./launch.sh
    ```
 
-## Usage Guide
+5. **Open your browser** and go to: http://localhost:8501
 
-### Market Parameters
+## 📊 Features
 
-**Currency Pair Selection:**
-- Choose from major FX pairs with appropriate market conventions
-- Day count basis automatically defaults to market standard
-- Settlement days configurable (standard: T+2)
-
-**Market Data:**
-- **Spot Rate**: Current exchange rate
-- **Domestic Rate**: Interest rate of the base currency (deposit currency)
-- **Foreign Rate**: Interest rate of the quote currency
-- **Volatility**: Implied volatility of the currency pair
-
-### Product Configuration
-
-**Maturity & Notional:**
-- **Maturity**: Time to option expiration (days)
-- **Notional**: Investment amount in base currency
-- **Settlement**: Additional days between option maturity and deposit settlement
-
-**Rate Structure:**
-- **Base Deposit Rate**: Starting rate for the maturity
-- **Term Structure**: Optional maturity adjustment
-- **Rate Curve Slope**: Rate increase per day of maturity (basis points)
-
-### Key Outputs
-
-#### 📊 **Pricing Results**
-- **Enhanced Rate**: The improved annual rate offered
-- **Option Premium**: Value of the embedded call option (in base currency)
-- **Conversion Probability**: Statistical likelihood of currency conversion
-
-#### 💱 **Currency Scenarios**
-- **No Conversion**: Receive enhanced deposit in base currency
-- **Conversion**: Receive fixed amount in quote currency
-- **Break-even Analysis**: Principal protection visualization
-
-#### 📈 **Risk Analytics**
-- **Greeks**: Delta, Gamma, Theta, Vega, Rho
-- **Sensitivity Analysis**: Rate matrix across strikes and maturities
-- **Market Risk**: Color-coded risk indicators
-
-## Mathematical Framework
-
-### Enhanced Rate Calculation
-```
-Enhanced Rate = Adjusted Base Rate + (Option Premium / (Notional × Deposit Year Fraction))
-
-Where:
-- Adjusted Base Rate = Base Rate + (Rate Curve Slope × Maturity Days)
-- Deposit Year Fraction = Maturity Days / Day Count Basis (360 or 365)
-- Option Premium = Black-Scholes Call Option Value × Notional
-```
-
-### Settlement Timing
-```
-Option Maturity Date = Trade Date + Maturity Days
-Deposit Settlement Date = Option Maturity Date + Settlement Days (typically T+2)
-```
-
-### Day Count Conventions
-- **360-day basis**: Used for EUR/USD, USD/JPY, USD/CHF
-- **365-day basis**: Used for GBP/USD, AUD/USD, USD/CAD, NZD/USD
-
-## Example Scenarios
-
-### Scenario 1: EUR/USD DCD
-- **Investment**: $1,000,000 USD for 91 days
-- **Currency Pair**: EUR/USD at 1.0500
-- **Strike**: 1.0300 (2.9% out-of-the-money)
-- **Base Rate**: 2.0% → Enhanced Rate: ~12.5%
-- **If EUR/USD ≤ 1.0300**: Receive $1,031,250 USD
-- **If EUR/USD > 1.0300**: Receive €970,874 EUR
-
-### Scenario 2: GBP/USD DCD  
-- **Investment**: $2,000,000 USD for 180 days
-- **Currency Pair**: GBP/USD at 1.2500
-- **Strike**: 1.2000 (4.0% out-of-the-money)
-- **Day Count**: 365-day basis
-- **Enhanced Rate**: Varies based on volatility and term structure
-
-## Technical Implementation
-
-### Core Technologies
-- **QuantLib**: Professional quantitative finance library
-- **Streamlit**: Interactive web application framework
-- **Plotly**: Advanced financial visualizations
-- **NumPy/Pandas**: Numerical computing and data analysis
-
-### Financial Models
-- **Garman-Kohlhagen**: FX option pricing model
-- **Black-Scholes-Merton**: Underlying option theory
-- **Risk-Neutral Valuation**: Market-consistent pricing
+### Core Functionality
+- **Professional DCD Pricing**: Uses Garman-Kohlhagen FX option model via QuantLib
+- **Tiered Rate Structure**: Configure realistic deposit rates for different maturity ranges
+- **Interactive Analysis**: Real-time parameter adjustment with instant recalculation
+- **Risk Assessment**: Conversion probability and Greek sensitivities
+- **Rate Matrix Analysis**: Compare rates across different strikes and maturities
 
 ### Market Conventions
-- **Business Day Calendars**: TARGET calendar for date calculations
-- **Day Count Methods**: 30/360 and Actual/365 conventions
-- **Settlement Conventions**: T+2 FX settlement standard
+- **Multiple Currency Pairs**: EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CHF, USD/CAD, NZD/USD
+- **Day Count Conventions**: 360/365 day count basis with currency-specific defaults
+- **Settlement Modeling**: T+2 business day settlement between option and deposit
+- **Professional Styling**: Clean, emoji-free interface suitable for business use
 
-## File Structure
+### Visualization & Export
+- **Payoff Diagrams**: Interactive charts showing DCD risk/return profile
+- **Rate Heat Maps**: Visual matrix of enhanced rates vs strike/maturity
+- **SVG Export**: High-quality chart exports for presentations
+- **Detailed Analysis**: Expandable sections with comprehensive scenarios
 
+## 🏦 Understanding DCDs
+
+### What is a DCD?
+A Dual Currency Deposit combines:
+- **Enhanced deposit rate** (higher than regular deposits)
+- **Currency conversion risk** (if exchange rate exceeds strike)
+
+### Key Concepts
+- **Strike Rate**: Exchange rate threshold for conversion
+- **Enhanced Rate**: Higher interest rate you receive
+- **Conversion Probability**: Likelihood of receiving foreign currency
+- **Option Premium**: Value embedded in the enhanced rate
+
+### Risk Profile
+- **Below Strike**: Keep enhanced deposit in original currency ✅
+- **Above Strike**: Principal converted at strike rate (miss upside) ⚠️
+
+## 🔧 Configuration Options
+
+### Rate Structure Types
+1. **Tiered Rates** (Recommended): Define specific rates for maturity ranges
+   - Example: 2.00% (1-21d), 2.10% (22-60d), 2.30% (61-90d)
+2. **Linear Progression**: Rates increase smoothly with maturity
+
+### Market Parameters
+- **Spot Rate**: Current exchange rate
+- **Interest Rates**: Domestic and foreign risk-free rates
+- **Volatility**: Expected exchange rate volatility
+- **Strike**: DCD conversion level
+
+## 📁 File Structure
 ```
 DCD Pricer/
-├── main.py              # Main Streamlit application
-├── test_pricer.py       # Comprehensive test suite
-├── config.py            # Configuration parameters
-├── launch.sh            # Easy startup script
-├── requirements.txt     # Python dependencies
-├── README.md           # This documentation
-└── .venv/              # Virtual environment
+├── main.py                    # Main application
+├── setup.py                   # Automatic setup script
+├── requirements.txt           # Package dependencies
+├── launch_dcd_pricer.bat     # Windows launcher (auto-created)
+├── launch_dcd_pricer.sh      # Mac/Linux launcher (auto-created)
+├── README.md                 # This file
+└── CHANGELOG.md              # Version history
 ```
 
-## Risk Considerations
+## 🐛 Troubleshooting
 
-### 🔴 **Currency Risk**
-- Principal may be converted to foreign currency
-- Exchange rate risk on converted amounts
-- Hedging considerations for risk management
+### Common Issues
 
-### 📊 **Interest Rate Risk**
-- Sensitivity to domestic and foreign rate changes
-- Term structure risk for longer maturities
-- Basis risk between deposit and option rates
+**"streamlit: command not found"**
+- Ensure Python and pip are properly installed
+- Try: `python -m streamlit run main.py`
 
-### 📈 **Volatility Risk**
-- Higher volatility increases option value and enhanced rates
-- Volatility smile and term structure effects
-- Model risk from constant volatility assumption
+**"No module named 'QuantLib'"**
+- Install QuantLib: `pip install QuantLib-Python`
+- On some systems: `pip3 install QuantLib-Python`
 
-### ⏱️ **Time Decay**
-- Option value decreases as maturity approaches
-- Theta risk for dynamic hedging
-- Settlement timing considerations
+**Port already in use**
+- Use different port: `streamlit run main.py --server.port 8502`
 
-## Advanced Features
+**Permission denied (Mac/Linux)**
+- Make script executable: `chmod +x launch_dcd_pricer.sh`
 
-### 🔢 **Rate Matrix Analysis**
-Generate comprehensive rate matrices showing enhanced rates across:
-- **Strike Range**: From deep out-of-the-money to at-the-money
-- **Maturity Range**: Short-term (30 days) to long-term (365+ days)
-- **Heat Maps**: Color-coded visualization for quick analysis
-- **Data Export**: Tabular format for further analysis
+### System-Specific Notes
 
-### 📊 **Risk Management Tools**
-- **Greeks Dashboard**: Real-time sensitivity analysis
-- **Scenario Analysis**: Stress testing across market conditions
-- **Break-even Analysis**: Principal protection levels
-- **Probability Distributions**: Monte Carlo capabilities
+**Windows:**
+- Use Command Prompt or PowerShell
+- Ensure Python is in system PATH
+- Some antivirus software may flag Python scripts
 
-### 🏦 **Client Presentation Features**
-- **Professional Layouts**: Clean, institutional-grade interface
-- **Export Capabilities**: Charts and tables for client materials
-- **Multi-currency Display**: Clear currency labeling
-- **Risk Disclaimers**: Built-in compliance considerations
+**Mac:**
+- May need to install Xcode command line tools: `xcode-select --install`
+- Use Terminal application
+- Allow Python through Gatekeeper if prompted
 
-This enhanced DCD pricer provides institutional-quality pricing and risk management capabilities for structured deposit products.
+**Linux:**
+- Install Python development headers: `sudo apt-get install python3-dev`
+- Some distributions require separate pip installation
+
+## 💡 Usage Tips
+
+1. **Start Simple**: Use default parameters first to understand the interface
+2. **Tiered Rates**: Switch to "Tiered Rates" for realistic market modeling
+3. **Strike Selection**: Choose strikes close to current spot for balanced risk/reward
+4. **Matrix Analysis**: Use rate matrix to compare multiple scenarios
+5. **Export Charts**: Use SVG format for high-quality presentations
+
+## � Updates
+
+The application includes automatic chart refresh and real-time parameter updates. No manual refresh needed when changing inputs.
+
+## 📞 Support
+
+For technical issues:
+1. Check the troubleshooting section above
+2. Ensure all requirements are properly installed
+3. Verify Python version compatibility (3.8+)
+
+## ⚖️ Disclaimer
+
+This tool is for educational and analysis purposes. Always consult with qualified financial professionals before making investment decisions. Past performance and theoretical models do not guarantee future results.
